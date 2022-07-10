@@ -18,7 +18,9 @@
 {{ form|crispy }}
 
 <input type="submit" value="Login" class="btn btn-primary" />
-<input type="hidden" name="next" value="{{ next }}" />
+    {% if next != "/accounts/login/" %}
+        <input type="hidden" name="next" value="{{ next }}" />
+    {% endif %}
 </form>
 
 {% endblock %}
