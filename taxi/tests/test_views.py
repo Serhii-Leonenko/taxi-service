@@ -1,11 +1,12 @@
 from django.contrib.auth import get_user_model
-from django.test import TestCase, Client
+from django.test import TestCase
 from django.urls import reverse
 
 from taxi.models import Manufacturer, Car
 
 MANUFACTURERS_URL = reverse("taxi:manufacturer-list")
 DRIVER_CREATE_URL = reverse("taxi:driver-create")
+CAR_CREATE_URL = reverse("taxi:car-create")
 
 
 class PublicManufacturerTests(TestCase):
@@ -75,6 +76,42 @@ class PrivateDriverCreateTests(TestCase):
         self.assertEqual(new_user.first_name, form_data["first_name"])
         self.assertEqual(new_user.last_name, form_data["last_name"])
         self.assertEqual(new_user.license_number, form_data["license_number"])
+
+
+class PublicCarCreateTests(TestCase):
+    def test_login_required(self):
+        res = self.client.get(CAR_CREATE_URL)
+
+        self.assertNotEqual(res.status_code, 200)
+
+
+class PrivateCarCreateTests(TestCase):
+    def setUp(self) -> None:
+        self.user = get_user_model().objects.create_user(
+            username="new_user",
+            password="Test12345"
+        )
+        self.client.force_login(self.user)
+
+    def test_create_car(self):
+
+        manufacturer = Manufacturer.objects.create(
+            name="manufacturer",
+            country="japan"
+        )
+
+        form_data = {
+            "model": "car_model",
+            "manufacturer": manufacturer.id,
+            "drivers": [f"{self.user.id}", ]
+        }
+
+        self.client.post(CAR_CREATE_URL, data=form_data)
+        new_car = Car.objects.get(model="car_model")
+
+        self.assertEqual(new_car.model, form_data["model"])
+        self.assertEqual(new_car.manufacturer.id, form_data["manufacturer"])
+        self.assertIn(int(form_data["drivers"][0]), new_car.drivers.all().values_list("id", flat=True))
 
 
 class TestCarDeleteAddDriverView(TestCase):

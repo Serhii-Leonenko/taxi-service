@@ -1,4 +1,7 @@
 body {
     margin-top: 20px;
-    font-family: 'Brush Script MT', cursive;
+    font-family: Georgia, serif;
+}
+.sidebar-nav {
+    font-size: 18px;
 }
